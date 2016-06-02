@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"sync/atomic"
 	"unsafe"
@@ -79,15 +80,30 @@ func (c *certificate) reload() error {
 	return nil
 }
 
-// buildConfig reads command-line options and builds a tls.Config
-func buildConfig(caBundlePath string) (*tls.Config, error) {
+func certBundle(caBundlePath string) (*x509.CertPool, error) {
+	if caBundlePath == "" {
+		return x509.SystemCertPool()
+	}
+
 	caBundleBytes, err := ioutil.ReadFile(caBundlePath)
 	if err != nil {
 		return nil, err
 	}
 
-	caBundle := x509.NewCertPool()
-	caBundle.AppendCertsFromPEM(caBundleBytes)
+	bundle := x509.NewCertPool()
+	if !bundle.AppendCertsFromPEM(caBundleBytes) {
+		return nil, fmt.Errorf("unable to parse ca-bundle")
+	}
+
+	return bundle, nil
+}
+
+// buildConfig reads command-line options and builds a tls.Config
+func buildConfig(caBundlePath string) (*tls.Config, error) {
+	caBundle, err := certBundle(caBundlePath)
+	if err != nil {
+		return nil, err
+	}
 
 	return &tls.Config{
 		// Certificates

@@ -205,3 +205,23 @@ func TestBuildConfig(t *testing.T) {
 	assert.Nil(t, cert, "cert with invalid params should be nil")
 	assert.NotNil(t, err, "should reject invalid keystore (empty)")
 }
+
+func TestBuildConfigSystemRoots(t *testing.T) {
+	conf, err := buildConfig("")
+	assert.Nil(t, err, "should be able to build TLS config")
+	assert.NotNil(t, conf.RootCAs, "config must have CA certs")
+	assert.NotNil(t, conf.ClientCAs, "config must have CA certs")
+	assert.True(t, conf.MinVersion == tls.VersionTLS12, "must have correct TLS min version")
+}
+
+func TestBuildConfigInvalidCaBundle(t *testing.T) {
+	tmpCaBundle, err := ioutil.TempFile("", "ghostunnel-test")
+	panicOnError(err)
+
+	defer os.Remove(tmpCaBundle.Name())
+	tmpCaBundle.WriteString("Lorem ipsum certificus nullum")
+
+	conf, err := buildConfig(tmpCaBundle.Name())
+	assert.Nil(t, conf, "config with invalid CA bundle should be nil")
+	assert.NotNil(t, err, "should reject invalid CA cert bundle")
+}

@@ -75,7 +75,7 @@ Then, build ghostunnel and run tests:
     make build
     make test
 
-Ghostunnel is tested with Go 1.6, and our integration test suite requires
+Ghostunnel is tested with Go 1.7, and our integration test suite requires
 Python 3.5.
 
 ### Server mode 
